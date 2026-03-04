@@ -3,7 +3,7 @@ import { createCanvas } from "canvas";
 export default function handler(req, res) {
   try {
     // ==============================
-    // 1️⃣ VALIDATION & SANITIZATION
+    // 1️⃣ Validation & Sanitization
     // ==============================
     const sanitize = (str) =>
       (str || "")
@@ -13,42 +13,47 @@ export default function handler(req, res) {
 
     const name1 = sanitize(req.query.name1) || "Him";
     const name2 = sanitize(req.query.name2) || "Her";
-    const style = req.query.style || "romantic";
+    const style = req.query.style || "romantic"; // romantic, anime, dark, luxury
     const premium = req.query.premium === "true";
     const format = req.query.format || "image"; // image | json
 
     const size = premium ? 1080 : 800;
 
     // ==============================
-    // 2️⃣ CANVAS SETUP
+    // 2️⃣ Canvas setup
     // ==============================
     const canvas = createCanvas(size, size);
     const ctx = canvas.getContext("2d");
 
     // ==============================
-    // 3️⃣ BACKGROUND GRADIENTS
+    // 3️⃣ Background gradient
     // ==============================
     const gradient = ctx.createLinearGradient(0, 0, size, size);
 
-    if (style === "dark") {
-      gradient.addColorStop(0, "#141E30");
-      gradient.addColorStop(1, "#243B55");
-    } else if (style === "anime") {
-      gradient.addColorStop(0, "#ff758c");
-      gradient.addColorStop(1, "#ff7eb3");
-    } else if (style === "luxury") {
-      gradient.addColorStop(0, "#000000");
-      gradient.addColorStop(1, "#434343");
-    } else {
-      gradient.addColorStop(0, "#ff4da6");
-      gradient.addColorStop(1, "#ff9966");
+    switch (style) {
+      case "dark":
+        gradient.addColorStop(0, "#141E30");
+        gradient.addColorStop(1, "#243B55");
+        break;
+      case "anime":
+        gradient.addColorStop(0, "#ff758c");
+        gradient.addColorStop(1, "#ff7eb3");
+        break;
+      case "luxury":
+        gradient.addColorStop(0, "#000000");
+        gradient.addColorStop(1, "#434343");
+        break;
+      default:
+        gradient.addColorStop(0, "#ff4da6");
+        gradient.addColorStop(1, "#ff9966");
+        break;
     }
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, size, size);
 
     // ==============================
-    // 4️⃣ ROUNDED CORNERS
+    // 4️⃣ Rounded corners
     // ==============================
     const radius = 80;
     ctx.globalCompositeOperation = "destination-in";
@@ -64,27 +69,24 @@ export default function handler(req, res) {
     ctx.quadraticCurveTo(0, 0, radius, 0);
     ctx.closePath();
     ctx.fill();
-
     ctx.globalCompositeOperation = "source-over";
 
     // ==============================
-    // 5️⃣ AVATAR CIRCLES
+    // 5️⃣ Avatar circles
     // ==============================
     const circleRadius = size / 6;
     const centerY = size / 3;
 
     ctx.fillStyle = "rgba(255,255,255,0.15)";
-
     ctx.beginPath();
     ctx.arc(size / 3, centerY, circleRadius, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.beginPath();
     ctx.arc((size / 3) * 2, centerY, circleRadius, 0, Math.PI * 2);
     ctx.fill();
 
     // ==============================
-    // 6️⃣ TEXT STYLING
+    // 6️⃣ Text styling
     // ==============================
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
@@ -99,19 +101,18 @@ export default function handler(req, res) {
     if (style === "luxury") heart = "✨";
 
     const text = `${name1} ${heart} ${name2}`;
-
     ctx.fillText(text, size / 2, size * 0.75);
-   // ==============================
-// 7️⃣ WATERMARK PRO
-// ==============================
+
+    // ==============================
+    // 7️⃣ Watermark "by crazy"
+    // ==============================
     ctx.globalAlpha = 0.35;
     ctx.shadowBlur = 0;
-
     ctx.font = premium ? "28px Arial" : "22px Arial";
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
 
-// hmm
+    // petite ligne design au-dessus
     ctx.beginPath();
     ctx.moveTo(size * 0.35, size - 70);
     ctx.lineTo(size * 0.65, size - 70);
@@ -119,15 +120,14 @@ export default function handler(req, res) {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-// texte watermark :)
-    ctx.fillText("by crazy", size / 2, size - 40);
+    // texte watermark
+    ctx.fillText("by crazy Dev ;)", size / 2, size - 40);
     ctx.globalAlpha = 1;
 
     // ==============================
-    // 8️⃣ RESPONSE
+    // 8️⃣ Response
     // ==============================
     res.setHeader("Cache-Control", "public, max-age=86400");
-    res.setHeader("Content-Type", "image/png");
 
     if (format === "json") {
       return res.json({
@@ -139,12 +139,10 @@ export default function handler(req, res) {
       });
     }
 
+    res.setHeader("Content-Type", "image/png");
     return res.send(canvas.toBuffer("image/png"));
 
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      error: "Internal Server Error"
-    });
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 }
